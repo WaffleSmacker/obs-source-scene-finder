@@ -37,7 +37,7 @@
         }
     },
     "name": "obs-source-scene-finder",
-    "displayName": "Source Scene Jumper for OBS",
+    "displayName": "Source Scene Finder for OBS",
     "version": "1.0.0",
     "author": "WaffleSmacker",
     "website": "https://github.com",

@@ -11,7 +11,7 @@
 #include <QApplication>
 
 OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("obs-source-scene-jumper", "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("obs-source-scene-finder", "en-US")
 
 static SceneJumper *sceneJumper = nullptr;
 
@@ -36,7 +36,7 @@ void obs_module_unload()
 
 const char *obs_module_name()
 {
-	return "Source Scene Jumper";
+	return "Source Scene Finder";
 }
 
 const char *obs_module_description()
