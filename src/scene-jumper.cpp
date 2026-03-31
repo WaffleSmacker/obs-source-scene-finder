@@ -105,12 +105,15 @@ void SceneJumper::findSourcesList()
 		sourcesListWidget =
 			qobject_cast<QAbstractItemView *>(sources);
 		if (sourcesListWidget) {
-			connect(sourcesListWidget,
-				SIGNAL(customContextMenuRequested(QPoint)),
-				this,
-				SLOT(onSourceContextMenuRequested(QPoint)));
+			/* Install event filter on both the view and its
+			   viewport. In QAbstractItemView, mouse events
+			   (including context menu) are delivered to the
+			   viewport widget. */
+			sourcesListWidget->installEventFilter(this);
+			sourcesListWidget->viewport()->installEventFilter(
+				this);
 			obs_log(LOG_INFO,
-				"Connected to sources context menu signal");
+				"Installed event filter on sources list");
 			return;
 		}
 	}
@@ -119,26 +122,28 @@ void SceneJumper::findSourcesList()
 }
 
 /* ------------------------------------------------------------------ */
-/*  Signal handler: sources context menu requested                    */
-/* ------------------------------------------------------------------ */
-
-void SceneJumper::onSourceContextMenuRequested(const QPoint &)
-{
-	if (shuttingDown)
-		return;
-	expectingSourceMenu = true;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Global event filter - catch QMenu show events                     */
+/*  Global event filter                                               */
+/*  - On sources list: catch ContextMenu to set flag                  */
+/*  - On any QMenu: catch Show to inject our items                    */
 /* ------------------------------------------------------------------ */
 
 bool SceneJumper::eventFilter(QObject *obj, QEvent *event)
 {
-	if (shuttingDown || !expectingSourceMenu)
+	if (shuttingDown)
 		return false;
 
-	if (event->type() == QEvent::Show) {
+	/* Catch the context menu event on the sources list or its viewport.
+	   This fires BEFORE Qt emits customContextMenuRequested,
+	   so the flag is set before OBS's handler runs. */
+	if (event->type() == QEvent::ContextMenu && sourcesListWidget &&
+	    (obj == sourcesListWidget ||
+	     obj == sourcesListWidget->viewport())) {
+		expectingSourceMenu = true;
+		return false; /* let Qt handle it normally */
+	}
+
+	/* Catch the menu being shown */
+	if (expectingSourceMenu && event->type() == QEvent::Show) {
 		QMenu *menu = qobject_cast<QMenu *>(obj);
 		if (menu) {
 			expectingSourceMenu = false;
